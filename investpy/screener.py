@@ -6,7 +6,7 @@ from .utils.screen_obj import ScreenerParams
 from .utils.screen_result_obj import ScreenResultObj
 
 
-def screener(params, n_results=None, as_dataframe=True):
+def screener(params, n_results=500, as_dataframe=True):
     """
 
 
@@ -43,16 +43,25 @@ def screener(params, n_results=None, as_dataframe=True):
 
     url = 'https://www.investing.com/stock-screener/Service/SearchStocks'
 
-    req = requests.post(url, headers=head, data=params)
-    if req.status_code != 200:
-        raise ConnectionError("ERR#0015: error " + str(req.status_code) + ", try again later.")
+    n_fetched = 0
+    pn = 1
+    search_results = []
 
-    data = req.json()
+    while n_fetched < n_results:
+        params["pn"] = pn
+        req = requests.post(url, headers=head, data=params)
+        if req.status_code != 200:
+            raise ConnectionError("ERR#0015: error " + str(req.status_code) + ", try again later.")
 
-    if n_results is None:
-        n_results = data['totalCount']
+        data = req.json()
 
-    search_results = [ScreenResultObj(rec) for rec in data["hits"][:n_results]]
+        if data['totalCount'] < n_results:
+            n_results = data['totalCount']
+
+        n_fetched += len(data["hits"])
+        pn += 1
+
+        search_results += [ScreenResultObj(rec) for rec in data["hits"]]
 
     return to_dataframe(search_results) if as_dataframe else search_results
 

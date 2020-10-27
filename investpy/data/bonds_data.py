@@ -30,7 +30,7 @@ def bonds_as_df(country=None):
 
             So on, the resulting :obj:`pandas.DataFrame` will look like::
 
-                country | name | full name 
+                country | name | full name
                 --------|------|-----------
                 xxxxxxx | xxxx | xxxxxxxxx
 
@@ -67,7 +67,7 @@ def bonds_as_df(country=None):
 
         bonds = bonds[bonds['country'] == country]
         bonds.reset_index(drop=True, inplace=True)
-        
+
         return bonds
 
 
@@ -97,7 +97,7 @@ def bonds_as_list(country=None):
         ValueError: raised whenever any of the introduced arguments is not valid.
         FileNotFoundError: raised when `bonds.csv` file was not found.
         IOError: raised when `bonds.csv` file is missing or empty.
-    
+
     """
 
     if country is not None and not isinstance(country, str):

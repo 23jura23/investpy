@@ -329,6 +329,8 @@ class ScreenerParams(object):
         self.industries = []
         self.equity_types = []
         self.filters = {}
+        self.order_field = "P/E Ratio"
+        self.order_dir = 'asc'
 
     """
     Return a list of all valid sectors for the `add_sector` method        
@@ -445,6 +447,17 @@ class ScreenerParams(object):
         self.filters[filter] = {"min": min, "max": max}
         return self
 
+    def order_by(self, filter, direction='a'):
+        if not filter:
+            raise ValueError("ERR#00??: filter can not be None, it should be a str.")
+        if not filter in FILTERS.keys():
+            raise ValueError("ERR#00??: %s is not a valid filter")
+        if not direction in ['a', 'd']:
+            raise ValueError("ERR#00??: direction must be a or d")
+        self.order_field = filter
+        self.order_dir = direction
+        return self
+
     """
         Builds the request form object using the values in the builder. You don't have
         to call tis method yourself. It is used in the `screener` to build the parameters
@@ -459,6 +472,8 @@ class ScreenerParams(object):
         data["equityType"] = join_equities(self.equity_types)
         # data["exchange[]"] is omitted for all exchanges
         data["pn"] = 1
+        data["order[col]"] = FILTERS[self.order_field]
+        data["order[dir]"] = self.order_dir
         build_filters(data, self.filters)
         return data
 
