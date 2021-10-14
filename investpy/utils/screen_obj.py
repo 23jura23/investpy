@@ -458,6 +458,8 @@ class ScreenerParams(object):
         data["industry"] = join_arr(self.industries, INDUSTRIES)
         data["equityType"] = join_equities(self.equity_types)
         # data["exchange[]"] is omitted for all exchanges
+        data["order[col]"] = 'name_trans'
+        data["order[dir]"] = 'a'
         data["pn"] = 1
         build_filters(data, self.filters)
         return data

@@ -5,6 +5,7 @@ from .utils.extra import random_user_agent
 from .utils.screen_obj import ScreenerParams
 from .utils.screen_result_obj import ScreenResultObj
 
+import math
 
 def screener(params, n_results=None, as_dataframe=True):
     """
@@ -31,6 +32,8 @@ def screener(params, n_results=None, as_dataframe=True):
     if not (params and isinstance(params, ScreenerParams)):
         raise ValueError('ERR#0074: params parameter is mandatory and it must be a ScreenerParams instance.')
 
+    search_results = []
+
     params = params.finish()
 
     head = {
@@ -43,16 +46,33 @@ def screener(params, n_results=None, as_dataframe=True):
 
     url = 'https://www.investing.com/stock-screener/Service/SearchStocks'
 
-    req = requests.post(url, headers=head, data=params)
-    if req.status_code != 200:
-        raise ConnectionError("ERR#0015: error " + str(req.status_code) + ", try again later.")
+    pn = 1
+    pn_max = None
+    while True:
+        params["pn"] = pn
 
-    data = req.json()
+        req = requests.post(url, headers=head, data=params)
+        if req.status_code != 200:
+            raise ConnectionError("ERR#0015: error " + str(req.status_code) + ", try again later.")
 
-    if n_results is None:
-        n_results = data['totalCount']
+        data = req.json()
+        if pn_max is None:
+            pn_max = math.ceil(data['totalCount']/50)
 
-    search_results = [ScreenResultObj(rec) for rec in data["hits"][:n_results]]
+        if n_results is None:
+            n_results = data['totalCount']
+
+        # print(f"data total count {data['totalCount']}")
+
+        # print(f"Len data hits {len(data['hits'])}")
+        # print(f"Recs {[rec['stock_symbol'] for rec in data['hits']]}")
+
+        search_results += [ScreenResultObj(rec) for rec in data["hits"][:n_results]]
+        # print(search_results)
+
+        if pn == pn_max or len(search_results) >= n_results:
+            break
+        pn += 1
 
     return to_dataframe(search_results) if as_dataframe else search_results
 
